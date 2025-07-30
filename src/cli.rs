@@ -42,3 +42,30 @@ pub fn get_args() -> Result<CliArgs, RustSealError> {
         file_path: file_path,
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fs::{File, read_to_string};
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    use crate::cli::CliArgs;
+
+    #[test]
+    fn smoke_test() {
+        let dir = tempdir().expect("Failed to create temporary directory");
+        let file_path = dir.path().join("test_file.txt");
+
+        let mut file = File::create(&file_path).expect("failed to create file");
+        writeln!(file, "Hello, world!").expect("failed to write to file");
+
+        let args = CliArgs {
+            file_path: file_path.clone(),
+        };
+
+        assert_eq!(
+            "Hello, world!",
+            read_to_string(&args.file_path).expect("failed to read file")
+        );
+    }
+}
