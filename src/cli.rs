@@ -64,7 +64,7 @@ mod tests {
         };
 
         assert_eq!(
-            "Hello, world!",
+            "Hello, world!\n",
             read_to_string(&args.file_path).expect("failed to read file")
         );
     }
