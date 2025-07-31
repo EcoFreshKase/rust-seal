@@ -1,9 +1,25 @@
+use crate::oqs::convert_str_to_sig_alg;
+
 use super::error::RustSealError;
+use clap::builder::ValueParser;
 use clap::{Arg, Command, ValueHint};
+use oqs::sig::Algorithm;
 use std::path::PathBuf;
 
 pub struct CliArgs {
     pub file_path: PathBuf,
+    pub signature_algorithm: Algorithm,
+}
+
+fn validate_signature_algorithm(algorithm: &str) -> Result<Algorithm, std::io::Error> {
+    let parsed = convert_str_to_sig_alg(algorithm).map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Invalid signature algorithm",
+        )
+    })?;
+
+    Ok(parsed)
 }
 
 pub fn get_args() -> Result<CliArgs, RustSealError> {
@@ -14,11 +30,20 @@ pub fn get_args() -> Result<CliArgs, RustSealError> {
         .value_name("FILE_PATH")
         .value_parser(clap::value_parser!(PathBuf));
 
+    let signature_algorithm_arg: Arg = Arg::new("signature_algorithm")
+        .long("signature-algorithm")
+        .short('s')
+        .help("Signature algorithm to use")
+        .default_value("Dilithium2")
+        .value_name("SIGNATURE_ALGORITHM")
+        .value_parser(ValueParser::new(validate_signature_algorithm));
+
     let cmd = Command::new("rust-seal")
         .author("<YOUR_NAME>, <myMail>")
         .version("0.0.1")
         .about("Rust Seal")
-        .arg(file_path_arg);
+        .arg(file_path_arg)
+        .arg(signature_algorithm_arg);
 
     let arg_matches = cmd.get_matches();
 
@@ -38,8 +63,18 @@ pub fn get_args() -> Result<CliArgs, RustSealError> {
         }
     };
 
+    let signature_algorithm = match arg_matches.get_one::<Algorithm>("signature_algorithm") {
+        Some(algorithm) => algorithm.clone(),
+        None => {
+            return Err(RustSealError::CliInvalidArgument(
+                "Signature algorithm argument is invalid".to_string(),
+            ));
+        }
+    };
+
     Ok(CliArgs {
         file_path: file_path,
+        signature_algorithm: signature_algorithm,
     })
 }
 
@@ -61,6 +96,7 @@ mod tests {
 
         let args = CliArgs {
             file_path: file_path.clone(),
+            signature_algorithm: oqs::sig::Algorithm::Dilithium2,
         };
 
         assert_eq!(

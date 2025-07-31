@@ -8,4 +8,6 @@ fn main() {
             std::process::exit(1);
         }
     };
+
+    println!("{}", args.signature_algorithm.to_string());
 }
