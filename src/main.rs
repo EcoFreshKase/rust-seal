@@ -9,5 +9,5 @@ fn main() {
         }
     };
 
-    println!("{}", args.signature.to_string());
+    println!("{}", args.signature.algorithm().name());
 }
