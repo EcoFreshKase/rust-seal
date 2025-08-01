@@ -2,13 +2,13 @@ use std::path::PathBuf;
 use std::{fs::File, io::Write};
 
 use anyhow::{Context, Result};
-use oqs::sig::{SecretKey as SigSecretKey, Sig, Signature};
+use oqs::sig::{PublicKey, SecretKey as SigSecretKey, Sig, Signature};
 
 pub fn sign_and_save_file_signature(
     file_path: &PathBuf,
     signature: &Sig,
     secret_key: &SigSecretKey,
-) -> Result<()> {
+) -> Result<PathBuf> {
     let signature =
         get_signature(file_path, signature, secret_key).context("Failed to create signature")?;
 
@@ -20,7 +20,7 @@ pub fn sign_and_save_file_signature(
     file.write_all(signature.as_ref())
         .context("Failed to write signature to file after creation")?;
 
-    Ok(())
+    Ok(signature_file_path)
 }
 
 fn get_signature(
@@ -36,6 +36,23 @@ fn get_signature(
         .context("Failed to sign file content")
 }
 
+fn verify_file_with_signature(
+    file_content: &[u8],
+    sig_content: &[u8],
+    signature: &Sig,
+    public_key: &PublicKey,
+) -> Result<()> {
+    let file_signature = signature
+        .signature_from_bytes(sig_content)
+        .context("Provided signature is not valid")?;
+
+    signature
+        .verify(file_content, &file_signature, public_key)
+        .context("Signature verification failed")?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs::File;
@@ -46,7 +63,9 @@ mod tests {
     use oqs::sig::Sig;
     use oqs::sig::{Algorithm, PublicKey as SigPublicKey, SecretKey as SigSecretKey};
 
-    use crate::cryptography::signature::sign_and_save_file_signature;
+    use crate::cryptography::signature::{
+        sign_and_save_file_signature, verify_file_with_signature,
+    };
 
     fn prep_test() -> (TempDir, File, PathBuf, Sig, SigPublicKey, SigSecretKey) {
         let dir = tempdir().expect("Failed to create temporary directory");
@@ -63,10 +82,27 @@ mod tests {
 
     #[test]
     fn test_signature_file_created() {
-        let (_dir, _file, file_path, sig, _, secret_key) = prep_test();
+        let (_dir, _, file_path, sig, _, secret_key) = prep_test();
 
         sign_and_save_file_signature(&file_path, &sig, &secret_key).unwrap();
 
-        assert!(file_path.exists());
+        assert!(
+            file_path.with_extension("sig").exists(),
+            "Signature file was not created"
+        );
+    }
+
+    #[test]
+    fn test_verify_signature() {
+        let (_dir, _, file_path, sig, public_key, secret_key) = prep_test();
+        let signature_file_path =
+            sign_and_save_file_signature(&file_path, &sig, &secret_key).unwrap();
+
+        let sig_content =
+            std::fs::read(&signature_file_path).expect("Failed to read signature file");
+        let file_content = std::fs::read(&file_path).expect("Failed to read file content");
+
+        verify_file_with_signature(&file_content, &sig_content, &sig, &public_key)
+            .expect("Signature verification failed");
     }
 }
