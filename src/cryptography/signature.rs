@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use oqs::sig::{PublicKey, SecretKey as SigSecretKey, Sig, Signature};
+use oqs::sig::{PublicKeyRef, SecretKey as SigSecretKey, Sig, Signature};
 
 use crate::util::create_file_with_content;
 
@@ -35,18 +35,18 @@ fn get_signature(
         .context("Failed to sign file content")
 }
 
-fn verify_file_with_signature(
+pub fn verify_file_with_signature(
     file_content: &[u8],
     sig_content: &[u8],
     signature: &Sig,
-    public_key: &PublicKey,
+    public_key: PublicKeyRef,
 ) -> Result<()> {
     let file_signature = signature
         .signature_from_bytes(sig_content)
         .context("Provided signature is not valid")?;
 
     signature
-        .verify(file_content, &file_signature, public_key)
+        .verify(file_content, file_signature, public_key)
         .context("Signature verification failed")?;
 
     Ok(())
@@ -59,8 +59,8 @@ mod tests {
     use std::path::PathBuf;
     use tempfile::{TempDir, tempdir};
 
-    use oqs::sig::Sig;
     use oqs::sig::{Algorithm, PublicKey as SigPublicKey, SecretKey as SigSecretKey};
+    use oqs::sig::{PublicKeyRef, Sig};
 
     use crate::cryptography::signature::{
         sign_and_save_file_signature, verify_file_with_signature,
@@ -101,7 +101,12 @@ mod tests {
             std::fs::read(&signature_file_path).expect("Failed to read signature file");
         let file_content = std::fs::read(&file_path).expect("Failed to read file content");
 
-        verify_file_with_signature(&file_content, &sig_content, &sig, &public_key)
-            .expect("Signature verification failed");
+        verify_file_with_signature(
+            &file_content,
+            &sig_content,
+            &sig,
+            PublicKeyRef::from(&public_key),
+        )
+        .expect("Signature verification failed");
     }
 }

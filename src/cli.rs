@@ -8,10 +8,10 @@ use oqs::sig::Algorithm;
 
 use std::path::PathBuf;
 
-const FILE_PATH_ID: &str = "file_path";
-const SIGNATURE_ALGORITHM_ID: &str = "signature_algorithm";
-const SIGNATURE_PATH_ID: &str = "signature_path";
-const PUBLIC_KEY_PATH_ID: &str = "public_key_path";
+pub const FILE_PATH_ID: &str = "file_path";
+pub const SIGNATURE_ALGORITHM_ID: &str = "signature_algorithm";
+pub const SIGNATURE_PATH_ID: &str = "signature_path";
+pub const PUBLIC_KEY_PATH_ID: &str = "public_key_path";
 
 const SIGN_SUBCOMMAND_NAME: &str = "sign";
 const VERIFY_SUBCOMMAND_NAME: &str = "verify";
@@ -24,13 +24,6 @@ fn validate_signature_algorithm(algorithm: &str) -> Result<Algorithm> {
 }
 
 pub fn create_cli() -> Command {
-    let file_path_arg: Arg = Arg::new(FILE_PATH_ID)
-        .help("Path to the file to sign")
-        .value_name("FILE_PATH")
-        .required(true)
-        .value_hint(ValueHint::FilePath)
-        .value_parser(clap::value_parser!(PathBuf));
-
     let signature_algorithm_arg: Arg = Arg::new(SIGNATURE_ALGORITHM_ID)
         .long("signature-algorithm")
         .short('s')
@@ -38,6 +31,13 @@ pub fn create_cli() -> Command {
         .default_value("Dilithium2")
         .value_name("SIGNATURE_ALGORITHM")
         .value_parser(ValueParser::new(validate_signature_algorithm));
+
+    let file_path_arg: Arg = Arg::new(FILE_PATH_ID)
+        .help("Path to the file to sign")
+        .value_name("FILE_PATH")
+        .required(true)
+        .value_hint(ValueHint::FilePath)
+        .value_parser(clap::value_parser!(PathBuf));
 
     let signature_path_arg: Arg = Arg::new(SIGNATURE_PATH_ID)
         .help("Path to the .sig file containing the signature")

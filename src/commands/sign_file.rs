@@ -1,38 +1,20 @@
 use std::path::PathBuf;
 
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result};
 use clap::ArgMatches;
-use oqs::sig::{Algorithm as SigAlgorithm, PublicKey as SigPublicKey, Sig};
+use oqs::sig::{PublicKey as SigPublicKey, Sig};
 
 use crate::{
-    cryptography::signature::sign_and_save_file_signature, util::create_file_with_content,
+    cli::FILE_PATH_ID,
+    cryptography::signature::sign_and_save_file_signature,
+    util::{create_file_with_content, parse_path_arg, parse_signature_algorithm_arg},
 };
 
-// pub struct SignFileArgs {
-//     pub file_path: PathBuf,
-//     pub signature: Sig,
-// }
-
 pub fn sign_file_command(args: &ArgMatches) -> Result<()> {
-    let file_path = args
-        .get_one::<PathBuf>("file_path")
-        .context("File path argument is invalid")
-        .and_then(|path| {
-            ensure!(
-                path.is_file(),
-                "The specified file does not exist or is not a file"
-            );
-            Ok(path)
-        })?;
+    let signature = parse_signature_algorithm_arg(args)?;
+    let file_path = parse_path_arg(args, FILE_PATH_ID)?;
 
-    let signature = args
-        .get_one::<SigAlgorithm>("signature_algorithm")
-        .context("Signature algorithm argument is invalid")
-        .and_then(|algorithm| {
-            Sig::new(*algorithm).context("Signature algorithm argument is invalid")
-        })?;
-
-    sign_file(file_path, &signature)?;
+    sign_file(file_path, &signature).context("Failed to sign file")?;
 
     Ok(())
 }
