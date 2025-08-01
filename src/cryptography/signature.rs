@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::{fs::File, io::Write};
 
 use anyhow::{Context, Result};
 use oqs::sig::{PublicKey, SecretKey as SigSecretKey, Sig, Signature};
