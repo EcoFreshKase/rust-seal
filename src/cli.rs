@@ -1,9 +1,10 @@
 use crate::oqs::convert_str_to_sig_alg;
 
-use super::error::RustSealError;
+use anyhow::{Context, Result, ensure};
 use clap::builder::ValueParser;
 use clap::{Arg, Command, ValueHint};
 use oqs::sig::{Algorithm, Sig};
+
 use std::path::PathBuf;
 
 pub struct CliArgs {
@@ -11,18 +12,14 @@ pub struct CliArgs {
     pub signature: Sig,
 }
 
-fn validate_signature_algorithm(algorithm: &str) -> Result<Algorithm, std::io::Error> {
-    let parsed = convert_str_to_sig_alg(algorithm).map_err(|_| {
-        std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "Invalid signature algorithm",
-        )
-    })?;
+fn validate_signature_algorithm(algorithm: &str) -> Result<Algorithm> {
+    let parsed = convert_str_to_sig_alg(algorithm)
+        .context(format!("Invalid signature algorithm: {}", algorithm))?;
 
     Ok(parsed)
 }
 
-pub fn get_args() -> Result<CliArgs, RustSealError> {
+pub fn get_args() -> Result<CliArgs> {
     let file_path_arg: Arg = Arg::new("file_path")
         .help("Path to the file to sign")
         .required(true)
@@ -49,64 +46,24 @@ pub fn get_args() -> Result<CliArgs, RustSealError> {
 
     let file_path = arg_matches
         .get_one::<PathBuf>("file_path")
-        .ok_or_else(|| {
-            RustSealError::CliInvalidArgument("File path argument is invalid".to_string())
-        })
+        .context("File path argument is invalid")
         .and_then(|path| {
-            if !path.is_file() {
-                return Err(RustSealError::CliInvalidArgument(
-                    "The specified file does not exist or is not a file".to_string(),
-                ));
-            }
+            ensure!(
+                path.is_file(),
+                "The specified file does not exist or is not a file"
+            );
             Ok(path)
         })?;
 
     let signature = arg_matches
         .get_one::<Algorithm>("signature_algorithm")
-        .ok_or_else(|| {
-            RustSealError::CliInvalidArgument("Signature algorithm argument is invalid".to_string())
-        })
+        .context("Signature algorithm argument is invalid")
         .and_then(|algorithm| {
-            Sig::new(*algorithm).map_err(|_| {
-                RustSealError::CliInvalidArgument(
-                    "Signature algorithm argument is invalid".to_string(),
-                )
-            })
+            Sig::new(*algorithm).context("Signature algorithm argument is invalid")
         })?;
 
     Ok(CliArgs {
         file_path: file_path.to_path_buf(),
         signature,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use std::fs::{File, read_to_string};
-    use std::io::Write;
-    use tempfile::tempdir;
-
-    use oqs::sig::Algorithm;
-    use oqs::sig::Sig;
-
-    use crate::cli::CliArgs;
-
-    #[test]
-    fn smoke_test() {
-        let dir = tempdir().expect("Failed to create temporary directory");
-        let file_path = dir.path().join("test_file.txt");
-
-        let mut file = File::create(&file_path).expect("failed to create file");
-        writeln!(file, "Hello, world!").expect("failed to write to file");
-
-        let args = CliArgs {
-            file_path: file_path.clone(),
-            signature: Sig::new(Algorithm::Dilithium2).unwrap(),
-        };
-
-        assert_eq!(
-            "Hello, world!\n",
-            read_to_string(&args.file_path).expect("failed to read file")
-        );
-    }
 }

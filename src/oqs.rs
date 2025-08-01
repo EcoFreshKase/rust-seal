@@ -1,12 +1,11 @@
+use anyhow::{Result, bail};
 /// Temporary module for OQS algorithm conversion
 /// A PR implementing `FromStr` for `oqs::kem::Algorithm` and `oqs::sig::Algorithm` is pending.
 /// Until the PR is merged and a new version is released, we this module is used for conversion.
 use oqs::kem::Algorithm as KemAlgorithm;
 use oqs::sig::Algorithm as SigAlgorithm;
 
-use crate::error::RustSealError;
-
-pub fn convert_str_to_kem_alg(alg: &str) -> Result<KemAlgorithm, RustSealError> {
+pub fn convert_str_to_kem_alg(alg: &str) -> Result<KemAlgorithm> {
     match alg {
         "BIKE-L3" => Ok(KemAlgorithm::BikeL3),
         "BIKE-L5" => Ok(KemAlgorithm::BikeL5),
@@ -37,14 +36,11 @@ pub fn convert_str_to_kem_alg(alg: &str) -> Result<KemAlgorithm, RustSealError> 
         "FrodoKEM-1344-AES" => Ok(KemAlgorithm::FrodoKem1344Aes),
         "FrodoKEM-1344-SHAKE" => Ok(KemAlgorithm::FrodoKem1344Shake),
         "BIKE-L1" => Ok(KemAlgorithm::BikeL1),
-        _ => Err(RustSealError::OqsError(format!(
-            "Unsupported KEM algorithm: {}",
-            alg
-        ))),
+        _ => bail!(format!("Unsupported KEM algorithm: {}", alg)),
     }
 }
 
-pub fn convert_str_to_sig_alg(alg: &str) -> Result<SigAlgorithm, RustSealError> {
+pub fn convert_str_to_sig_alg(alg: &str) -> Result<SigAlgorithm> {
     match alg {
         "cross-rsdp-128-balanced" => Ok(SigAlgorithm::CrossRsdp128Balanced),
         "cross-rsdp-128-fast" => Ok(SigAlgorithm::CrossRsdp128Fast),
@@ -100,9 +96,6 @@ pub fn convert_str_to_sig_alg(alg: &str) -> Result<SigAlgorithm, RustSealError> 
         "OV-Ip-pkc-skc" => Ok(SigAlgorithm::UovOvIpPkcSkc),
         "OV-III-pkc-skc" => Ok(SigAlgorithm::UovOvIIIPkcSkc),
         "OV-V-pkc-skc" => Ok(SigAlgorithm::UovOvVPkcSkc),
-        _ => Err(RustSealError::OqsError(format!(
-            "Unsupported signature algorithm: {}",
-            alg
-        ))),
+        _ => bail!(format!("Unsupported signature algorithm: {}", alg)),
     }
 }

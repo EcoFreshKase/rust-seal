@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Rust (Prompt for binary)",
+            "program": "${input:binaryPath}",
+            "args": [],
+            "cwd": "./",
+            "stopOnEntry": false,
+            "sourceLanguages": [
+                "rust"
+            ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "binaryPath",
+            "type": "promptString",
+            "description": "Path to binary (e.g., target/debug/rust-seal or target/debug/deps/your_test_bin)"
+        }
+    ]
+}
