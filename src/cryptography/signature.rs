@@ -4,6 +4,8 @@ use std::{fs::File, io::Write};
 use anyhow::{Context, Result};
 use oqs::sig::{PublicKey, SecretKey as SigSecretKey, Sig, Signature};
 
+use crate::util::create_file_with_content;
+
 pub fn sign_and_save_file_signature(
     file_path: &PathBuf,
     signature: &Sig,
@@ -14,11 +16,9 @@ pub fn sign_and_save_file_signature(
 
     // save file
     let signature_file_path = file_path.with_extension("sig");
-    let mut file =
-        File::create_new(&signature_file_path).context("Failed to create signature file")?;
 
-    file.write_all(signature.as_ref())
-        .context("Failed to write signature to file after creation")?;
+    create_file_with_content(&signature_file_path, signature.as_ref())
+        .context("Failed to create signature file with content")?;
 
     Ok(signature_file_path)
 }
