@@ -14,7 +14,7 @@ pub struct CliArgs {
 
 fn validate_signature_algorithm(algorithm: &str) -> Result<Algorithm> {
     let parsed = convert_str_to_sig_alg(algorithm)
-        .context(format!("Invalid signature algorithm: {}", algorithm))?;
+        .context(format!("Invalid signature algorithm: {algorithm}"))?;
 
     Ok(parsed)
 }
