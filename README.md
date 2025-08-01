@@ -11,4 +11,4 @@ To setup the application you need to have a local installation of [liboqs](https
 # Todo
 - replace `oqs.rs` with a new version of `oqs` where `algorithm` enums have a `FromStr` implementation
     - $\to$ see https://github.com/open-quantum-safe/liboqs-rust/pull/292
--  document all available Signature and KEM Algorithm somewhere
+-  document all available Signature and KEM Algorithm somewhere + terminal hints somehow

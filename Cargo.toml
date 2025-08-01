@@ -2,6 +2,7 @@
 name = "rust-seal"
 version = "0.1.0"
 edition = "2024"
+authors = ["Alexander Jablonowski"]
 
 [dependencies]
 anyhow = "1.0.98"
