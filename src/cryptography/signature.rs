@@ -63,7 +63,7 @@ mod tests {
 
     #[test]
     fn test_signature_file_created() {
-        let (dir, file, file_path, sig, _, secret_key) = prep_test();
+        let (_dir, _file, file_path, sig, _, secret_key) = prep_test();
 
         sign_and_save_file_signature(&file_path, &sig, &secret_key).unwrap();
 
