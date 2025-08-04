@@ -32,7 +32,7 @@ fn sign_file(file_path: &PathBuf, signature: &Sig) -> Result<()> {
     save_pub_key(&file_path.with_extension("pub"), &keypair.0)
         .context("Failed to save public key")?;
     println!(
-        "Public key saved successfully: {}",
+        "Public key created successfully: {}",
         file_path.with_extension("pub").display()
     );
 
