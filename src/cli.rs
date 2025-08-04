@@ -41,6 +41,7 @@ pub fn create_cli() -> Command {
 
     let signature_path_arg: Arg = Arg::new(SIGNATURE_PATH_ID)
         .help("Path to the .sig file containing the signature")
+        .long("sig-path")
         .value_name("SIGNATURE_PATH")
         .required(true)
         .value_hint(ValueHint::FilePath)
@@ -48,6 +49,7 @@ pub fn create_cli() -> Command {
 
     let public_key_path_arg: Arg = Arg::new(PUBLIC_KEY_PATH_ID)
         .help("Path to the .pub file containing the public key")
+        .long("pub-path")
         .value_name("PUBLIC_KEY_PATH")
         .required(true)
         .value_hint(ValueHint::FilePath)
