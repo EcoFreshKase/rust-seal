@@ -1,5 +1,7 @@
 use crate::Config;
-use crate::commands::{init_kem, init_sig, sign_file_command, verify_signature_command};
+use crate::commands::{
+    encrypt_file_command, init_kem, init_sig, sign_file_command, verify_signature_command,
+};
 use crate::oqs::{convert_str_to_kem_alg, convert_str_to_sig_alg};
 
 use anyhow::{Context, Result};
@@ -21,6 +23,7 @@ const VERIFY_SUBCOMMAND_NAME: &str = "verify";
 const INIT_SUBCOMMAND_NAME: &str = "init";
 const SIG_SUBCOMMAND_NAME: &str = "sig";
 const KEM_SUBCOMMAND_NAME: &str = "kem";
+const ENCRYPT_FILE_SUBCOMMAND_NAME: &str = "encrypt-file";
 
 fn validate_signature_algorithm(algorithm: &str) -> Result<SignatureAlgorithm> {
     let parsed = convert_str_to_sig_alg(algorithm)
@@ -49,11 +52,12 @@ pub fn create_cli() -> Command {
         .long("kem-algorithm")
         .short('k')
         .help("Specify the KEM algorithm to use")
+        .required(true)
         .value_name("KEM_ALGORITHM")
         .value_parser(ValueParser::new(validate_kem_algorithm));
 
     let file_path_arg: Arg = Arg::new(FILE_PATH_ID)
-        .help("Path to the file to sign")
+        .help("Path to the file to work with")
         .value_name("FILE_PATH")
         .required(true)
         .value_hint(ValueHint::FilePath)
@@ -103,6 +107,13 @@ pub fn create_cli() -> Command {
                 .arg(&sig_algorithm_arg),
         );
 
+    let encrypt_file_cmd = Command::new(ENCRYPT_FILE_SUBCOMMAND_NAME)
+        .about("Encrypt a file with a KEM algorithm and a signature algorithm")
+        .arg_required_else_help(true)
+        .arg(&kem_algorithm_arg)
+        .arg(&file_path_arg)
+        .arg(&public_key_path_arg);
+
     Command::new("rust-seal")
         .author(env!("CARGO_PKG_AUTHORS"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -111,6 +122,7 @@ pub fn create_cli() -> Command {
         .subcommand(sign_cmd)
         .subcommand(verify_cmd)
         .subcommand(init_cmd)
+        .subcommand(encrypt_file_cmd)
 }
 
 pub fn start(config: &mut Config) -> Result<()> {
@@ -127,6 +139,7 @@ pub fn start(config: &mut Config) -> Result<()> {
                 unreachable!("Subcommand should always be present");
             }
         },
+        Some((ENCRYPT_FILE_SUBCOMMAND_NAME, sub_matches)) => encrypt_file_command(sub_matches),
         _ => {
             unreachable!("Subcommand should always be present");
         }
