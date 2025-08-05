@@ -1,17 +1,11 @@
-use std::{fs::File, io::Write, path::PathBuf};
+use std::path::PathBuf;
 
 use anyhow::{Context, Result, ensure};
 use clap::ArgMatches;
+use oqs::kem::{Algorithm as KEMAlgorithm, Kem};
 use oqs::sig::{Algorithm as SigAlgorithm, Sig};
 
-use crate::cli::SIGNATURE_ALGORITHM_ID;
-
-pub fn create_file_with_content(file_path: &PathBuf, content: &[u8]) -> Result<PathBuf> {
-    let mut file = File::create_new(file_path).context("Failed to create file")?;
-    file.write_all(content)
-        .context("Failed to write content to file")?;
-    Ok(file_path.to_path_buf())
-}
+use crate::cli::{KEM_ALGORITHM_ID, SIGNATURE_ALGORITHM_ID};
 
 pub fn parse_path_arg<'a>(matches: &'a ArgMatches, id: &str) -> Result<&'a PathBuf> {
     matches
@@ -33,4 +27,11 @@ pub fn parse_signature_algorithm_arg(matches: &ArgMatches) -> Result<Sig> {
         .and_then(|algorithm| {
             Sig::new(*algorithm).context("Signature algorithm argument is invalid")
         })
+}
+
+pub fn parse_kem_algorithm_arg(matches: &ArgMatches) -> Result<Kem> {
+    matches
+        .get_one::<KEMAlgorithm>(KEM_ALGORITHM_ID)
+        .context("KEM algorithm argument is invalid")
+        .and_then(|algorithm| Kem::new(*algorithm).context("KEM algorithm argument is invalid"))
 }

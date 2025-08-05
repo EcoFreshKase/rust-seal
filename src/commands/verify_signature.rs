@@ -7,11 +7,6 @@ use crate::{
     util::{parse_path_arg, parse_signature_algorithm_arg},
 };
 
-// pub struct VerifySignatureArgs {
-//     pub file_path: PathBuf,
-//     pub signature: Sig,
-// }
-
 pub fn verify_signature_command(args: &ArgMatches) -> Result<()> {
     let signature = parse_signature_algorithm_arg(args)?;
     let file_path = parse_path_arg(args, FILE_PATH_ID)?;

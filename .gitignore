@@ -1,3 +1,6 @@
 /target
 /test/*
 !/test/testfile.txt
+
+rust-seal.config.json
+/keys

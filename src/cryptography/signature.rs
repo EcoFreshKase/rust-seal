@@ -1,28 +1,26 @@
-use std::path::PathBuf;
+use std::{fs::write, path::PathBuf};
 
 use anyhow::{Context, Result};
 use oqs::sig::{PublicKeyRef, SecretKey as SigSecretKey, Sig, Signature};
-
-use crate::util::create_file_with_content;
 
 pub fn sign_and_save_file_signature(
     file_path: &PathBuf,
     signature: &Sig,
     secret_key: &SigSecretKey,
 ) -> Result<PathBuf> {
-    let signature =
-        get_signature(file_path, signature, secret_key).context("Failed to create signature")?;
+    let signature = get_signature_from_file(file_path, signature, secret_key)
+        .context("Failed to create signature")?;
 
     // save file
     let signature_file_path = file_path.with_extension("sig");
 
-    create_file_with_content(&signature_file_path, signature.as_ref())
+    write(&signature_file_path, signature.as_ref())
         .context("Failed to create signature file with content")?;
 
     Ok(signature_file_path)
 }
 
-fn get_signature(
+pub fn get_signature_from_file(
     file_path: &PathBuf,
     signature: &Sig,
     secret_key: &SigSecretKey,
