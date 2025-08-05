@@ -10,8 +10,10 @@ use crate::{
 pub fn verify_signature_command(args: &ArgMatches) -> Result<()> {
     let signature = parse_signature_algorithm_arg(args)?;
     let file_path = parse_path_arg(args, FILE_PATH_ID)?;
-    let signature_path = parse_path_arg(args, SIGNATURE_PATH_ID)?;
-    let public_key_path = parse_path_arg(args, PUBLIC_KEY_PATH_ID)?;
+    let signature_path =
+        parse_path_arg(args, SIGNATURE_PATH_ID).unwrap_or_else(|_| file_path.with_extension("sig"));
+    let public_key_path = parse_path_arg(args, PUBLIC_KEY_PATH_ID)
+        .unwrap_or_else(|_| file_path.with_extension("pub"));
 
     let file_content =
         std::fs::read(file_path).context("Failed to read file content for verification")?;

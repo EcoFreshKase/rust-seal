@@ -28,7 +28,7 @@ pub fn sign_file_command(args: &ArgMatches, config: &mut Config) -> Result<()> {
         }
     };
 
-    sign_file(file_path, &signature, &public_key, &secret_key).context("Failed to sign file")?;
+    sign_file(&file_path, &signature, &public_key, &secret_key).context("Failed to sign file")?;
 
     Ok(())
 }

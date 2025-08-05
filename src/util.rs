@@ -7,7 +7,7 @@ use oqs::sig::{Algorithm as SigAlgorithm, Sig};
 
 use crate::cli::{KEM_ALGORITHM_ID, SIGNATURE_ALGORITHM_ID};
 
-pub fn parse_path_arg<'a>(matches: &'a ArgMatches, id: &str) -> Result<&'a PathBuf> {
+pub fn parse_path_arg(matches: &ArgMatches, id: &str) -> Result<PathBuf> {
     matches
         .get_one::<PathBuf>(id)
         .context(format!("Missing required argument: {id}"))
@@ -16,7 +16,7 @@ pub fn parse_path_arg<'a>(matches: &'a ArgMatches, id: &str) -> Result<&'a PathB
                 path.is_file(),
                 format!("The specified path is not a valid file: {}", path.display())
             );
-            Ok(path)
+            Ok(path.to_owned())
         })
 }
 

@@ -41,6 +41,7 @@ pub fn create_cli() -> Command {
         .long("signature-algorithm")
         .short('s')
         .help("Specify the signature algorithm to use")
+        .required(true)
         .value_name("SIGNATURE_ALGORITHM")
         .value_parser(ValueParser::new(validate_signature_algorithm));
 
@@ -59,18 +60,16 @@ pub fn create_cli() -> Command {
         .value_parser(clap::value_parser!(PathBuf));
 
     let signature_path_arg: Arg = Arg::new(SIGNATURE_PATH_ID)
-        .help("Path to the .sig file containing the signature")
+        .help("Path to the .sig file containing the signature. If not provided, the same path as the FILE_PATH will be used with a .sig extension")
         .long("sig-path")
         .value_name("SIGNATURE_PATH")
-        .required(true)
         .value_hint(ValueHint::FilePath)
         .value_parser(clap::value_parser!(PathBuf));
 
     let public_key_path_arg: Arg = Arg::new(PUBLIC_KEY_PATH_ID)
-        .help("Path to the .pub file containing the public key")
+        .help("Path to the .pub file containing the public key. If not provided, the same path as the FILE_PATH will be used with a .pub extension")
         .long("pub-path")
         .value_name("PUBLIC_KEY_PATH")
-        .required(true)
         .value_hint(ValueHint::FilePath)
         .value_parser(clap::value_parser!(PathBuf));
 
@@ -83,10 +82,10 @@ pub fn create_cli() -> Command {
     let verify_cmd = Command::new(VERIFY_SUBCOMMAND_NAME)
         .about("Verify a file signature")
         .arg_required_else_help(true)
-        .arg(&file_path_arg)
         .arg(&signature_path_arg)
         .arg(&public_key_path_arg)
-        .arg(&sig_algorithm_arg);
+        .arg(&sig_algorithm_arg)
+        .arg(&file_path_arg);
 
     let init_cmd = Command::new(INIT_SUBCOMMAND_NAME)
         .about("Initialize Rust Seal Algorithm")
