@@ -42,14 +42,14 @@ fn sign_file(
     let file_signature = get_signature_from_file(file_path, signature, secret_key)
         .context("Failed to create signature from file")?;
 
-    write(&file_path.with_extension("sig"), file_signature.as_ref())
+    write(file_path.with_extension("sig"), file_signature.as_ref())
         .context("Failed to write signature to file")?;
     println!(
         "Signature file created successfully: {}",
         file_path.with_extension("sig").display()
     );
 
-    write(&file_path.with_extension("pub"), public_key.as_ref())
+    write(file_path.with_extension("pub"), public_key.as_ref())
         .context("Failed to save public key")?;
     println!(
         "Public key created successfully: {}",

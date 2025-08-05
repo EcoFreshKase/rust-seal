@@ -20,19 +20,12 @@ const KEM_KEYS_DIR_PATH: &str = "./keys/kem";
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
+#[derive(Default)]
 pub struct Config {
     kem_algorithms: Vec<KEMAlgorithm>,
     signature_algorithms: Vec<SigAlgorithm>,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            kem_algorithms: Vec::new(),
-            signature_algorithms: Vec::new(),
-        }
-    }
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct KEMAlgorithm {
@@ -159,10 +152,10 @@ impl Config {
 
                 Ok((
                     sig.public_key_from_bytes(&public_key)
-                        .context(format!("Public key is not a valid key for {}", algorithm))?
+                        .context(format!("Public key is not a valid key for {algorithm}"))?
                         .to_owned(),
                     sig.secret_key_from_bytes(&secret_key)
-                        .context(format!("Secret key is not a valid key for {}", algorithm))?
+                        .context(format!("Secret key is not a valid key for {algorithm}"))?
                         .to_owned(),
                 ))
             })
