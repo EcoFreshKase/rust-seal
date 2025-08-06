@@ -30,7 +30,19 @@ pub fn encrypt_file_command(args: &ArgMatches) -> Result<()> {
     write(&ciphertext_path, ciphertext.as_ref()).context("Failed to write ciphertext to file")?;
     println!("Ciphertext written to {}", &ciphertext_path.display());
 
-    let decrypted_data_path = file_path.with_extension("dec");
+    let decrypted_data_path = file_path.with_extension(format!(
+        "{}.{}",
+        file_path
+            .extension()
+            .context("File must have an extension")?
+            .display(),
+        "dec"
+    ));
+    println!(
+        "Decrypted data will be saved to {}",
+        &decrypted_data_path.display()
+    );
+
     write(&decrypted_data_path, decrypted_data)
         .context("Failed to write decrypted data to file")?;
     println!(
