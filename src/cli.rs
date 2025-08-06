@@ -1,6 +1,7 @@
 use crate::Config;
 use crate::commands::{
-    encrypt_file_command, init_kem, init_sig, sign_file_command, verify_signature_command,
+    decrypt_file_command, encrypt_file_command, init_kem, init_sig, sign_file_command,
+    verify_signature_command,
 };
 use crate::oqs::{convert_str_to_kem_alg, convert_str_to_sig_alg};
 
@@ -17,6 +18,7 @@ pub const SIGNATURE_ALGORITHM_ID: &str = "signature_algorithm";
 pub const KEM_ALGORITHM_ID: &str = "kem_algorithm";
 pub const SIGNATURE_PATH_ID: &str = "signature_path";
 pub const PUBLIC_KEY_PATH_ID: &str = "public_key_path";
+pub const CIPHER_TEXT_PATH_ID: &str = "cipher_text_path";
 
 const SIGN_SUBCOMMAND_NAME: &str = "sign";
 const VERIFY_SUBCOMMAND_NAME: &str = "verify";
@@ -24,6 +26,7 @@ const INIT_SUBCOMMAND_NAME: &str = "init";
 const SIG_SUBCOMMAND_NAME: &str = "sig";
 const KEM_SUBCOMMAND_NAME: &str = "kem";
 const ENCRYPT_FILE_SUBCOMMAND_NAME: &str = "encrypt-file";
+const DECRYPT_FILE_SUBCOMMAND_NAME: &str = "decrypt-file";
 
 fn validate_signature_algorithm(algorithm: &str) -> Result<SignatureAlgorithm> {
     let parsed = convert_str_to_sig_alg(algorithm)
@@ -40,6 +43,10 @@ fn validate_kem_algorithm(algorithm: &str) -> Result<KEMAlgorithm> {
 }
 
 pub fn create_cli() -> Command {
+    //
+    // Define CLI arguments
+    //
+
     let sig_algorithm_arg: Arg = Arg::new(SIGNATURE_ALGORITHM_ID)
         .long("signature-algorithm")
         .short('s')
@@ -77,6 +84,17 @@ pub fn create_cli() -> Command {
         .value_hint(ValueHint::FilePath)
         .value_parser(clap::value_parser!(PathBuf));
 
+    let cipher_text_path_arg: Arg = Arg::new(CIPHER_TEXT_PATH_ID)
+        .help("Path to the ciphertext file used for the key decapsulation. If not provided, the same path as the FILE_PATH will be used with a .cipher extension")
+        .long("cipher-path")
+        .value_name("CIPHER_TEXT_PATH")
+        .value_hint(ValueHint::FilePath)
+        .value_parser(clap::value_parser!(PathBuf));
+
+    //
+    // Define CLI commands
+    //
+
     let sign_cmd = Command::new(SIGN_SUBCOMMAND_NAME)
         .about("Sign a file")
         .arg_required_else_help(true)
@@ -108,21 +126,29 @@ pub fn create_cli() -> Command {
         );
 
     let encrypt_file_cmd = Command::new(ENCRYPT_FILE_SUBCOMMAND_NAME)
-        .about("Encrypt a file with a KEM algorithm and a signature algorithm")
+        .about("Encrypt a file with AES and get the key with a KEM algorithm")
         .arg_required_else_help(true)
         .arg(&kem_algorithm_arg)
         .arg(&file_path_arg)
         .arg(&public_key_path_arg);
+
+    let decrypt_file_cmd = Command::new(DECRYPT_FILE_SUBCOMMAND_NAME)
+        .about("Decrypt a file with AES and get the key with a KEM algorithm. The KEM algorithm must be initialized first")
+        .arg_required_else_help(true)
+        .arg(&kem_algorithm_arg)
+        .arg(&file_path_arg)
+        .arg(&cipher_text_path_arg);
 
     Command::new("rust-seal")
         .author(env!("CARGO_PKG_AUTHORS"))
         .version(env!("CARGO_PKG_VERSION"))
         .about("Rust Seal")
         .arg_required_else_help(true)
-        .subcommand(sign_cmd)
-        .subcommand(verify_cmd)
-        .subcommand(init_cmd)
-        .subcommand(encrypt_file_cmd)
+        .subcommand(&sign_cmd)
+        .subcommand(&verify_cmd)
+        .subcommand(&init_cmd)
+        .subcommand(&encrypt_file_cmd)
+        .subcommand(&decrypt_file_cmd)
 }
 
 pub fn start(config: &mut Config) -> Result<()> {
@@ -136,12 +162,19 @@ pub fn start(config: &mut Config) -> Result<()> {
             Some((KEM_SUBCOMMAND_NAME, sub_matches)) => init_kem(sub_matches, config),
             Some((SIG_SUBCOMMAND_NAME, sub_matches)) => init_sig(sub_matches, config),
             _ => {
-                unreachable!("Subcommand should always be present");
+                unreachable!(
+                    "Subcommand should always be present. If execution reaches here, it means Clap has a bug or the CLI has a misconfigured subcommand"
+                );
             }
         },
         Some((ENCRYPT_FILE_SUBCOMMAND_NAME, sub_matches)) => encrypt_file_command(sub_matches),
+        Some((DECRYPT_FILE_SUBCOMMAND_NAME, sub_matches)) => {
+            decrypt_file_command(sub_matches, config)
+        }
         _ => {
-            unreachable!("Subcommand should always be present");
+            unreachable!(
+                "Subcommand should always be present. If execution reaches here, it means Clap has a bug or the CLI has a misconfigured subcommand."
+            );
         }
     }
 }

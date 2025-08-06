@@ -6,7 +6,7 @@ use std::{
 use anyhow::{Context, Result, bail};
 use oqs::{
     kem::{
-        Algorithm as KEMAlgorithmVariant, Kem, PublicKey as KEMPublicKey, SecretKey as KEMSecretKey,
+        Algorithm as KemAlgorithmVariant, Kem, PublicKey as KemPublicKey, SecretKey as KemSecretKey,
     },
     sig::{
         Algorithm as SigAlgorithmVariant, PublicKey as SigPublicKey, SecretKey as SigSecretKey, Sig,
@@ -22,14 +22,13 @@ const KEM_KEYS_DIR_PATH: &str = "./keys/kem";
 #[serde(default)]
 #[derive(Default)]
 pub struct Config {
-    kem_algorithms: Vec<KEMAlgorithm>,
+    kem_algorithms: Vec<KemAlgorithm>,
     signature_algorithms: Vec<SigAlgorithm>,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
-struct KEMAlgorithm {
-    algorithm: KEMAlgorithmVariant,
+struct KemAlgorithm {
+    algorithm: KemAlgorithmVariant,
     pub_key_path: PathBuf,
     sec_key_path: PathBuf,
 }
@@ -64,7 +63,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn add_kem_algorithm(&mut self, kem: &Kem) -> Result<(KEMPublicKey, KEMSecretKey)> {
+    pub fn add_kem_algorithm(&mut self, kem: &Kem) -> Result<(KemPublicKey, KemSecretKey)> {
         if self
             .kem_algorithms
             .iter()
@@ -88,7 +87,7 @@ impl Config {
         write(&sec_key_path, &secret_key).context("Failed to save secret key to file")?;
         println!("Secret key saved to: {}", sec_key_path.display());
 
-        self.kem_algorithms.push(KEMAlgorithm {
+        self.kem_algorithms.push(KemAlgorithm {
             algorithm: kem.algorithm(),
             pub_key_path,
             sec_key_path,
@@ -163,5 +162,33 @@ impl Config {
                 "Signature algorithm {} not found",
                 algorithm
             ))?
+    }
+
+    pub fn get_kem_keys(
+        &self,
+        algorithm: &KemAlgorithmVariant,
+    ) -> Result<(KemPublicKey, KemSecretKey)> {
+        self.kem_algorithms
+            .iter()
+            .find(|alg| &alg.algorithm == algorithm)
+            .map(|alg| {
+                let public_key =
+                    read(&alg.pub_key_path).context("Failed to read public key file")?;
+                let secret_key =
+                    read(&alg.sec_key_path).context("Failed to read secret key file")?;
+
+                let kem = Kem::new(*algorithm)
+                    .context("Failed to create KEM algorithm. Algorithm might me disabled.")?;
+
+                Ok((
+                    kem.public_key_from_bytes(&public_key)
+                        .context(format!("Public key is not a valid key for {algorithm}"))?
+                        .to_owned(),
+                    kem.secret_key_from_bytes(&secret_key)
+                        .context(format!("Secret key is not a valid key for {algorithm}"))?
+                        .to_owned(),
+                ))
+            })
+            .ok_or(anyhow::anyhow!("KEM algorithm {} not found", algorithm))?
     }
 }
