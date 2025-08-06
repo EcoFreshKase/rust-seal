@@ -14,8 +14,6 @@ To setup the application you need to have a local installation of [liboqs](https
 -  document all available Signature and KEM Algorithm somewhere + terminal hints somehow
 - add a command to verify own public key (via certificate) and save that instead of the plain pub key
     - $\to$ while verifying the signature it can be assured that the public key was not altered $\to$ makes sure that the whole verifying process is trustable!
-- add pqc encryption 
-
 
 # KEM Algorithms
  - BIKE-L3
