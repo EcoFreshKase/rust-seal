@@ -6,7 +6,12 @@
             "request": "launch",
             "name": "Debug Rust (Prompt for binary)",
             "program": "${input:binaryPath}",
-            "args": [],
+            "args": [
+                "decrypt-file",
+                "./test/testfile.txt.dec",
+                "-k",
+                "BIKE-L3"
+            ],
             "cwd": "./",
             "stopOnEntry": false,
             "sourceLanguages": [

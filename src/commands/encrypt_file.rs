@@ -1,12 +1,12 @@
 use std::fs::{read, write};
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, ensure};
 use clap::ArgMatches;
 use oqs::kem::{Ciphertext, Kem, PublicKeyRef as KemPublicKeyRef};
 
 use crate::{
     cli::{FILE_PATH_ID, PUBLIC_KEY_PATH_ID},
-    cryptography::symmetric::symmetric_encrypt,
+    cryptography::{AES_KEY_SIZE, symmetric::symmetric_encrypt},
     util::{parse_kem_algorithm_arg, parse_path_arg},
 };
 
@@ -61,6 +61,12 @@ fn encrypt_file(
     let (ciphertext, shared_secret) = kem
         .encapsulate(public_key)
         .context("Failed to encapsulate using KEM algorithm. Algorithm might be disabled.")?;
+
+    println!("Shared secret length: {}", shared_secret.len());
+    ensure!(
+        shared_secret.len() >= AES_KEY_SIZE,
+        "Shared secret is too short. Use another KEM algorithm"
+    );
 
     let decrypted_data = symmetric_encrypt(file_content, shared_secret.as_ref())
         .context("Failed to encrypt file content with shared secret")?;
