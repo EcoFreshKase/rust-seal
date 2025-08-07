@@ -55,7 +55,7 @@ pub fn decrypt_file_command(sub_matches: &ArgMatches, config: &Config) -> Result
     let mut save_file_path = file_path.with_extension("");
     while save_file_path.exists() {
         let stem = save_file_path.file_stem().unwrap().to_string_lossy();
-        let new_stem = format!("{}-decrypt", stem);
+        let new_stem = format!("{stem}-decrypt");
         save_file_path.set_file_name(format!(
             "{}.{}",
             new_stem,

@@ -1,8 +1,8 @@
 use aes_gcm::{
-    AeadCore, Aes256Gcm, Key, KeyInit, KeySizeUser,
+    AeadCore, Aes256Gcm, Key, KeyInit,
     aead::{Aead, OsRng},
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use tracing::debug;
 
 pub const AES_KEY_SIZE: usize = 32; // 256 bits
@@ -41,7 +41,7 @@ pub fn symmetric_encrypt(data: &[u8], key: &[u8]) -> Result<Vec<u8>> {
 pub fn symmetric_decrypt(data: &[u8], key: &[u8]) -> Result<Vec<u8>> {
     let aes_key: &Key<Aes256Gcm> = key.into();
     let cipher = Aes256Gcm::new(aes_key);
-    let (nonce, data) = extract_data_and_nonce(&data).unwrap();
+    let (nonce, data) = extract_data_and_nonce(data).unwrap();
 
     let decrypted_data = cipher
         .decrypt(nonce.into(), data)
@@ -55,8 +55,8 @@ fn combine_data_and_nonce(data: &[u8], nonce: &[u8]) -> Vec<u8> {
     combined.extend_from_slice(nonce);
     combined.extend_from_slice(data);
 
-    print_byte_array("Data", &data);
-    print_byte_array("Nonce", &nonce);
+    print_byte_array("Data", data);
+    print_byte_array("Nonce", nonce);
     print_byte_array("Nonce Length", &nonce.len().to_le_bytes()[..1]);
     print_byte_array("Combined", &combined);
 
@@ -85,7 +85,7 @@ fn extract_data_and_nonce(combined: &[u8]) -> Result<(&[u8], &[u8])> {
 fn print_byte_array(pre: &str, data: &[u8]) {
     let bytes = data
         .iter()
-        .map(|&b| format!("{:#04x} ", b))
+        .map(|&b| format!("{b:#04x} "))
         .collect::<String>();
     debug!("{}:\n{}", pre, bytes);
 }
